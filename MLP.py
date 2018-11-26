@@ -100,7 +100,7 @@ def compute_cost(A_last, Y) :
     return cost
 
 # 加入L2正则化之后的损耗计算
-def compute_cost_with_regularization(A_last, Y, parameters, lambd = 0.0001) : 
+def compute_cost_with_regularization(A_last, Y, parameters, lambd = 0.05) : 
     assert(A_last.shape == Y.shape)
     num_train = A_last.shape[1]
     num_layer = len(parameters) // 2
@@ -135,7 +135,7 @@ def linear_backward(dZ, cache_linear) :
     return d_A_pre, d_Weight, d_Bias
 
 # 定义反向传播——包含正则过程的线性求导部分
-def linear_backward_with_regulation(dZ, cache_linear, lambd = 0.0001) : 
+def linear_backward_with_regulation(dZ, cache_linear, lambd = 0.05) : 
      # 从缓存中取出对应的L层参数
     Weight = cache_linear[0]
     Bias = cache_linear[1]
@@ -236,7 +236,7 @@ def neural_network_model(X, Y, layer_dims, learning_rate = 0.001, num_iteration 
         assert(shuffled_Y.shape[1] == num_train)
 
         A_last, caches = nn_model_forward(shuffled_X, parameters)
-        cost = compute_cost(A_last, shuffled_Y)
+        cost = compute_cost_with_regularization(A_last, shuffled_Y, parameters)
         grads = nn_model_backward(A_last, shuffled_Y, caches)
         parameters = parameters_update(parameters, grads, learning_rate)
         
@@ -250,7 +250,7 @@ def neural_network_model(X, Y, layer_dims, learning_rate = 0.001, num_iteration 
             costs.append(cost)
 
     plt.figure()
-    plt.plot(np.squeeze(costs))
+    plt.plot(np.squeeze(costs), label = "without adam")
     plt.ylabel("cost")
     plt.xlabel("iterations (per hundreds)")
     plt.title("Learning rate = " + str(learning_rate))
@@ -287,8 +287,8 @@ def neutral_network_Adam(X, Y, layer_dims, learning_rate = 0.001,
             print("Cost after iteration %i ：%f" %(i, cost))
             costs.append(cost)
 
-    plt.figure()
-    plt.plot(np.squeeze(costs))
+    #plt.figure()
+    plt.plot(np.squeeze(costs), label = "with adam")
     plt.ylabel("cost")
     plt.xlabel("iterations (per hundreds)")
     plt.title("Learning rate = " + str(learning_rate))
@@ -305,7 +305,7 @@ def load_train_data() :
     train_X = np.arange(0, 2 * math.pi + 0.1, (2 * math.pi) / 8)
     train_X = np.sort(train_X, None)
     train_Y = np.sin(train_X)
-    #train_Y = np.abs(np.sin(train_X))
+    train_Y = np.abs(np.sin(train_X))
     return train_X, train_Y
 
 def load_train_data2() : 
@@ -356,14 +356,23 @@ layer_dims = [1, 3, 3, 1]
 train_X = np.reshape(train_X, (1, -1))
 train_Y = np.reshape(train_Y, (1, -1))
 test_X = np.reshape(test_X, (1, -1))
-#parameters = neural_network_model(train_X, train_Y, layer_dims, learning_rate = 0.6)
+parameters = neural_network_model(train_X, train_Y, layer_dims, learning_rate = 0.001)
 parameters = neutral_network_Adam(train_X, train_Y, layer_dims, learning_rate = 0.001)
 test_Y = predict(test_X, parameters)
-test_Y_real = np.sin(test_X)
-#test_Y_real = np.abs(np.sin(test_X))
+#test_Y_real = np.sin(test_X)
+test_Y_real = np.abs(np.sin(test_X))
 plt.figure()
-plt.plot(np.squeeze(test_X), np.squeeze(test_Y_real))
-plt.plot(np.squeeze(test_X), np.squeeze(test_Y))
+plt.rcParams["figure.figsize"] = (6.0, 4.0)              # 以英寸为单位的图片宽高设定
+plt.rcParams["image.interpolation"] = "nearest"
+plt.style.use('classic')
+plt.plot(np.squeeze(test_X), np.squeeze(test_Y_real), "g", linewidth = 1.2, label = "reality")
+plt.plot(np.squeeze(test_X), np.squeeze(test_Y), "r", linewidth = 1.2, label = "prediction")
+plt.ylabel("y")
+plt.xlabel("x")
+plt.ylim(-0.2, 1.4)
+plt.title("learning rate = 0.001 with adam")
+plt.grid()
+plt.legend(loc = 1)
 plt.show()
 """
 
@@ -372,12 +381,20 @@ train_X, train_Y = load_train_data2()
 test_X, test_Y_real = load_test_data2()
 test_Y_real = np.sort(test_Y_real)
 layer_dims = [2, 3, 3, 1]
+parameters = neural_network_model(train_X, train_Y, layer_dims, learning_rate = 0.001)
 parameters = neutral_network_Adam(train_X, train_Y, layer_dims, learning_rate = 0.001)
 test_Y = predict(test_X, parameters)
 test_Y = np.sort(test_Y)
 plt.figure()
-plt.plot(np.squeeze(test_Y_real))
-plt.plot(np.squeeze(test_Y))
+plt.style.use('classic')
+plt.ylim(-0.5, 1.5)
+plt.ylabel("y")
+plt.xlabel("sequence number of x")
+plt.plot(np.squeeze(test_Y_real), "g", linewidth = 1.2, label = "reality")
+plt.plot(np.squeeze(test_Y), "r", linewidth = 1.2, label = "prediction")
+plt.title("learning rate = 0.001 with adam")
+plt.grid()
+plt.legend(loc = 1)
 plt.show()
 
 
